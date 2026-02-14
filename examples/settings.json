@@ -1,0 +1,20 @@
+{
+  "git_panel": {
+    "button": true,
+    "dock": "right",
+    "default_width": 320,
+    "status_style": "icon",
+    "sort_by_path": false,
+    "collapse_untracked_diff": false,
+    "tree_view": false
+  },
+  "git": {
+    "git_gutter": "tracked_files",
+    "inline_blame": {
+      "enabled": true,
+      "delay_ms": 600,
+      "show_commit_summary": true
+    },
+    "hunk_style": "staged_hollow"
+  }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "label": "Review Claude Changes",
+    "command": "bash",
+    "args": [
+      "-c",
+      "MANIFEST=\"$HOME/.claude/changes/latest.json\"; if [ ! -f \"$MANIFEST\" ] || [ ! -s \"$MANIFEST\" ]; then echo 'No Claude changes found.'; exit 0; fi; if [ -L \"$MANIFEST\" ]; then MANIFEST=$(readlink \"$MANIFEST\"); fi; FILES=$(jq -r '[.changes[] | .file + \":\" + (.line | tostring)] | unique | .[]' \"$MANIFEST\"); if [ -z \"$FILES\" ]; then echo 'No files in manifest.'; exit 0; fi; echo \"Opening $(echo \"$FILES\" | wc -l | tr -d ' ') changed files...\"; echo $FILES | xargs zed"
+    ],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Clear Claude Change Manifest",
+    "command": "bash",
+    "args": [
+      "-c",
+      "LATEST=\"$HOME/.claude/changes/latest.json\"; if [ -L \"$LATEST\" ]; then TARGET=$(readlink \"$LATEST\"); rm -f \"$TARGET\" \"$LATEST\"; echo 'Manifest cleared.'; elif [ -f \"$LATEST\" ]; then rm -f \"$LATEST\"; echo 'Manifest cleared.'; else echo 'No manifest found.'; fi"
+    ],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "no_focus",
+    "hide": "on_success"
+  }
+]

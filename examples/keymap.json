@@ -1,0 +1,24 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-shift-r": "git_panel::ToggleFocus",
+      "ctrl-shift-d": "git::Diff"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "alt-]": "editor::GoToHunk",
+      "alt-[": "editor::GoToPreviousHunk",
+      "alt-\\": "editor::ExpandAllDiffHunks",
+      "alt-'": "editor::ToggleSelectedDiffHunks"
+    }
+  },
+  {
+    "context": "GitPanel",
+    "bindings": {
+      "cmd-shift-o": "git::OpenModifiedFiles"
+    }
+  }
+]
