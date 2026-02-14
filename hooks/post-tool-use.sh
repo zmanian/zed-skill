@@ -13,6 +13,7 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name')
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id')
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path')
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Skip if missing required fields
@@ -45,10 +46,15 @@ MANIFEST="$CHANGES_DIR/$SESSION_ID.json"
 
 # Create manifest if it doesn't exist
 if [ ! -f "$MANIFEST" ]; then
+  PROJECT=""
+  if [ -n "$CWD" ]; then
+    PROJECT=$(basename "$CWD")
+  fi
   jq -n \
     --arg sid "$SESSION_ID" \
     --arg ts "$TIMESTAMP" \
-    '{session_id: $sid, started: $ts, changes: []}' > "$MANIFEST"
+    --arg proj "$PROJECT" \
+    '{session_id: $sid, started: $ts, project: $proj, label: "", changes: []}' > "$MANIFEST"
 fi
 
 # Append the change entry
