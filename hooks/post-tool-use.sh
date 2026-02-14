@@ -19,6 +19,9 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 if [ "$FILE_PATH" = "null" ] || [ -z "$FILE_PATH" ]; then
   exit 0
 fi
+if [ "$SESSION_ID" = "null" ] || [ -z "$SESSION_ID" ]; then
+  exit 0
+fi
 
 # For Edit tool, estimate line from old_string (first line of match)
 # For Write tool, line is 1 (new file / full rewrite)
