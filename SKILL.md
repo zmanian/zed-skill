@@ -236,6 +236,26 @@ Keystrokes are space-separated. Each keystroke uses the same modifier-key syntax
 | `terminal_panel::ToggleFocus` | Toggle/focus terminal |
 | `workspace::NewTerminal` | New terminal tab |
 
+### Git
+| Action | Description |
+|--------|-------------|
+| `git_panel::ToggleFocus` | Toggle/focus git panel |
+| `git::Diff` | Open project diff view |
+| `git::OpenModifiedFiles` | Open all modified files |
+| `git::StageAndNext` | Stage current hunk, advance to next |
+| `git::UnstageAndNext` | Unstage current hunk, advance to next |
+| `git::ToggleStaged` | Toggle staged state |
+| `git::Commit` | Commit staged changes |
+| `git::GenerateCommitMessage` | AI-generated commit message |
+| `git::Fetch` | Fetch from remote |
+| `git::Push` | Push to remote |
+| `git::Pull` | Pull from remote |
+| `git::Restore` | Restore/undo changes |
+| `editor::GoToHunk` | Navigate to next diff hunk |
+| `editor::GoToPreviousHunk` | Navigate to previous diff hunk |
+| `editor::ExpandAllDiffHunks` | Expand all hunks inline |
+| `editor::ToggleSelectedDiffHunks` | Toggle diff for selected hunks |
+
 ---
 
 ## Settings (settings.json)
@@ -300,6 +320,30 @@ Settings is a JSON **object**. Key settings to know about:
       "provider": "anthropic",
       "model": "claude-sonnet-4-5-20250514"
     }
+  }
+}
+```
+
+### Git Settings
+
+```json
+{
+  "git_panel": {
+    "button": true,
+    "dock": "left",
+    "default_width": 360,
+    "status_style": "icon",
+    "sort_by_path": false,
+    "tree_view": false
+  },
+  "git": {
+    "git_gutter": "tracked_files",
+    "inline_blame": {
+      "enabled": true,
+      "delay_ms": 600,
+      "show_commit_summary": true
+    },
+    "hunk_style": "staged_hollow"
   }
 }
 ```
@@ -484,3 +528,92 @@ Example — Rust project:
 - **SendKeystrokes is synchronous** — Don't try to chain actions that depend on async results (file opens, palette searches, LSP responses).
 - **Context matching** — Contexts match at specific tree levels. `vim_mode` is set at `Editor` level, so `"Workspace && vim_mode == normal"` will never match.
 - **Zed auto-reloads config** — changes to keymap.json and settings.json take effect immediately without restarting.
+
+---
+
+## Claude Code Integration: Change Review Workflow
+
+This workflow bridges Claude Code (running in Warp, Ghostty, or any external terminal) with Zed for seamless change review.
+
+### How It Works
+
+1. A PostToolUse hook in Claude Code records every file edit to a session manifest
+2. A Zed task reads the manifest and opens all changed files at the right lines
+3. Git review keybindings let you cycle through diffs, stage/revert per hunk
+
+### Setup
+
+**Step 1: Install the hook**
+
+Copy the hook script to a permanent location:
+
+```bash
+mkdir -p ~/.claude/hooks
+cp hooks/post-tool-use.sh ~/.claude/hooks/post-tool-use.sh
+chmod +x ~/.claude/hooks/post-tool-use.sh
+```
+
+**Step 2: Configure Claude Code**
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-tool-use.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Step 3: Add the Zed tasks**
+
+Merge the contents of `examples/tasks.json` into your global Zed tasks file:
+- macOS: `~/Library/Application Support/Zed/tasks.json`
+- Linux: `~/.config/zed/tasks.json`
+
+**Step 4: Add review keybindings (optional)**
+
+Merge `examples/keymap.json` into your Zed keymap:
+- macOS: `~/Library/Application Support/Zed/keymap.json`
+- Linux: `~/.config/zed/keymap.json`
+
+**Step 5: Configure git panel (optional)**
+
+Merge `examples/settings.json` into your Zed settings to dock the git panel on the right for a review-friendly layout.
+
+### Usage
+
+1. Run Claude Code in your terminal -- it edits files as usual
+2. Switch to Zed
+3. Run the **"Review Claude Changes"** task from the command palette (`cmd-shift-p` > "task: spawn" > "Review Claude Changes")
+4. All files Claude edited open at the relevant lines
+5. Use `alt-]` / `alt-[` to jump between diff hunks
+6. Use `alt-\` to expand all diffs inline
+7. Use the git panel to stage/revert changes
+8. When done reviewing, run **"Clear Claude Change Manifest"** to reset
+
+### Change Manifest
+
+Changes accumulate per Claude Code session at `~/.claude/changes/<session-id>.json`. A symlink at `~/.claude/changes/latest.json` always points to the current session.
+
+Format:
+```json
+{
+  "session_id": "abc123",
+  "started": "2026-02-14T10:30:00Z",
+  "changes": [
+    {"file": "/path/to/file.rs", "line": 42, "tool": "Edit", "timestamp": "..."},
+    {"file": "/path/to/new.rs", "line": 1, "tool": "Write", "timestamp": "..."}
+  ]
+}
+```
